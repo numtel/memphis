@@ -1,9 +1,10 @@
 import {setGroupChecked} from './menuSystem.js';
 
 // Editor State
-let gridData = [];
-let cursor = { x: 0, y: 0 };
-let mode = 'horizontal';
+// Load saved data or default to an empty array
+let gridData = JSON.parse(localStorage.getItem('gridData')) || [];
+let cursor = JSON.parse(localStorage.getItem('editorCursor')) || { x: 0, y: 0 };
+let mode = localStorage.getItem('editorMode') || 'horizontal';
 // Keep synced with .cell height/width in style.css
 // And #editor-container padding
 const cellSize = 20;
@@ -142,14 +143,24 @@ function renderEditor(scrollToCursor = false) {
 function updateAndRender() {
   updateBounds();
   renderEditor(true); // True here means keyboard/actions will snap to cursor
+
+  // Save the current grid state to localStorage
+  localStorage.setItem('gridData', JSON.stringify(gridData));
+  localStorage.setItem('editorCursor', JSON.stringify(cursor));
 }
 
 // Listen to scrolling to trigger new virtualization frames
 editorContainer.addEventListener('scroll', () => {
   if (scrollRafId) cancelAnimationFrame(scrollRafId);
   scrollRafId = requestAnimationFrame(() => {
-    // FIX: False here ensures passive scrolling doesn't snap back to cursor
+    // False here ensures passive scrolling doesn't snap back to cursor
     renderEditor(false); 
+
+    // Save scroll position
+    localStorage.setItem('editorScroll', JSON.stringify({
+      left: editorContainer.scrollLeft,
+      top: editorContainer.scrollTop
+    }));
   });
 });
 
@@ -201,7 +212,12 @@ window.addEventListener('keydown', (e) => {
 
   if (e.key.length === 1) {
     e.preventDefault();
+
     while (gridData.length <= cursor.y) gridData.push([]);
+    // Sometimes after a rotate, there will be holes not at the end of the array
+    // Ensure the specific row exists, even if it's a "hole" inside the array bounds
+    if (!gridData[cursor.y]) gridData[cursor.y] = [];
+
     gridData[cursor.y][cursor.x] = e.key;
 
     if (mode === 'horizontal') cursor.x++;
@@ -338,11 +354,13 @@ class MyApi {
   horizontal(event) {
     setGroupChecked(event.target);
     mode = 'horizontal';
+    localStorage.setItem('editorMode', mode); // Save preference
   }
-  
+
   vertical(event) {
     setGroupChecked(event.target);
     mode = 'vertical';
+    localStorage.setItem('editorMode', mode); // Save preference
   }
   
   rotate() {
@@ -358,6 +376,11 @@ class MyApi {
           newGrid[x][y] = char;
         }
       }
+    }
+
+    // Fill gaps to ensure it's a dense array before updating state
+    for (let i = 0; i < newGrid.length; i++) {
+      if (!newGrid[i]) newGrid[i] = [];
     }
 
     // Update the global state
@@ -378,3 +401,16 @@ window.api = new MyApi();
 
 // Initial render
 updateAndRender();
+
+// Restore scroll position after initial render
+const savedScroll = JSON.parse(localStorage.getItem('editorScroll'));
+if (savedScroll) {
+  editorContainer.scrollLeft = savedScroll.left;
+  editorContainer.scrollTop = savedScroll.top;
+}
+
+// Sync the menu UI with the loaded mode
+const activeModeBtn = document.querySelector(`[onclick*="api.${mode}"]`);
+if (activeModeBtn) {
+  setGroupChecked(activeModeBtn);
+}
