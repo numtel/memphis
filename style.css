@@ -15,7 +15,7 @@ memphis-menubar {
   flex-grow: 1;
   display: grid;
   gap: 0;
-  background-color: #fafafa;
+  background-color: var(--highlight);
   padding: 20px;
   overflow: auto;
   align-content: start;
@@ -25,19 +25,19 @@ memphis-menubar {
 .cell {
   width: 20px;
   height: 20px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--bevel2light);
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: monospace;
   font-size: 1.2rem;
-  color: #222;
   user-select: none;
 }
 
 .cell.cursor {
-  background-color: #e6f2ff;
-  outline: 2px solid #0078ff;
-  border-color: #0078ff;
+  background-color: var(--title2);
+  outline: 2px solid var(--title1);
+  border-color: var(--title1);
   z-index: 1;
 }
