@@ -472,6 +472,10 @@ class MyApi {
     resetEditorDOM();
     updateAndRender();
   }
+
+  github() {
+    window.open('https://github.com/numtel/memphis');
+  }
 }
 
 window.api = new MyApi();
