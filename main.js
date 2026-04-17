@@ -5,6 +5,7 @@ let gridData = [];
 let cursor = { x: 0, y: 0 };
 let mode = 'horizontal';
 // Keep synced with .cell height/width in style.css
+// And #editor-container padding
 const cellSize = 20;
 
 const editorContainer = document.getElementById('editor-container');
@@ -155,11 +156,15 @@ editorContainer.addEventListener('scroll', () => {
 // Mathematical click handler
 editorContainer.addEventListener('pointerdown', (e) => {
   const rect = editorContainer.getBoundingClientRect();
+  // Get the padding value (matches the 20px in style.css)
+  const padding = cellSize;
+
   const x = e.clientX - rect.left + editorContainer.scrollLeft;
   const y = e.clientY - rect.top + editorContainer.scrollTop;
 
-  const targetX = Math.floor(x / cellSize);
-  const targetY = Math.floor(y / cellSize);
+  // Subtract the padding before dividing by cellSize
+  const targetX = Math.floor((x - padding) / cellSize);
+  const targetY = Math.floor((y - padding) / cellSize);
 
   if (targetX >= 0 && targetY >= 0 && targetX < maxCols && targetY < maxRows) {
     cursor.x = targetX;
