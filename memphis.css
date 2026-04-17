@@ -107,6 +107,9 @@ form:focus-within .button:not([type="button"]):not([disabled])::after,
 .link svg { margin-right: 8px; }
 
 memphis-menubar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   background: var(--face);
   padding: 2px;
   display: flex;

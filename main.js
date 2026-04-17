@@ -10,6 +10,7 @@ let mode = localStorage.getItem('editorMode') || 'horizontal';
 const cellSize = 20;
 
 const editorContainer = document.getElementById('editor-container');
+const hiddenInput = document.getElementById('hidden-input');
 
 // Optimization: State caching for Virtualization
 const cellCache = new Map();
@@ -20,7 +21,7 @@ let scrollRafId = null;
 
 // Completely clears the DOM and cache when loading new files
 function resetEditorDOM() {
-  editorContainer.innerHTML = '';
+  editorContainer.querySelectorAll('.cell').forEach(el => el.remove());
   cellCache.clear();
   currentCursorElement = null;
 }
@@ -119,6 +120,25 @@ function renderEditor(scrollToCursor = false) {
     if (x === cursor.x && y === cursor.y) {
       cell.classList.add('cursor');
       currentCursorElement = cell;
+
+      // Physically move the hidden input INSIDE the active cell
+      cell.appendChild(hiddenInput);
+
+      // Ensure it stays focused after moving so the keyboard stays open
+      if (document.activeElement !== hiddenInput && /Mobi|Android/i.test(navigator.userAgent)) {
+          hiddenInput.focus();
+      }
+
+      // CRITICAL: Give Firefox 10ms to register the DOM move, then force scroll
+      setTimeout(() => {
+        if (currentCursorElement) {
+          currentCursorElement.scrollIntoView({
+            behavior: 'auto',
+            block: 'nearest',
+            inline: 'nearest'
+          });
+        }
+      }, 10);
     }
   }
 
@@ -165,7 +185,7 @@ editorContainer.addEventListener('scroll', () => {
 });
 
 // Mathematical click handler
-function updateFromPointer(e) {
+function updateFromPointer(e, shouldFocus = false) {
   const rect = editorContainer.getBoundingClientRect();
   // Get the padding value (matches the 20px in style.css)
   const padding = cellSize;
@@ -180,6 +200,12 @@ function updateFromPointer(e) {
   if (targetX >= 0 && targetY >= 0 && targetX < maxCols && targetY < maxRows) {
     cursor.x = targetX;
     cursor.y = targetY;
+    // Only focus if requested, and use a timeout to beat the browser's default tap behavior
+    if (shouldFocus) {
+      setTimeout(() => {
+        hiddenInput.focus();
+      }, 10);
+    }
     updateAndRender(); // Will snap to the cell clicked
   }
 }
@@ -187,15 +213,15 @@ function updateFromPointer(e) {
 let pointerDown = false;
 editorContainer.addEventListener('pointerdown', (e) => {
   pointerDown = true;
-  updateFromPointer(e);
+  updateFromPointer(e, true);
 });
 editorContainer.addEventListener('pointermove', (e) => {
-  if(pointerDown) updateFromPointer(e);
+  if(pointerDown) updateFromPointer(e, false);
 });
 window.addEventListener('pointerup', (e) => {
   pointerDown = false;
   if(e.target.classList && e.target.classList.contains('cell')) {
-    updateFromPointer(e);
+    updateFromPointer(e, true);
   }
 });
 
@@ -212,18 +238,9 @@ window.addEventListener('keydown', (e) => {
 
   if (e.key.length === 1) {
     e.preventDefault();
-
-    while (gridData.length <= cursor.y) gridData.push([]);
-    // Sometimes after a rotate, there will be holes not at the end of the array
-    // Ensure the specific row exists, even if it's a "hole" inside the array bounds
-    if (!gridData[cursor.y]) gridData[cursor.y] = [];
-
-    gridData[cursor.y][cursor.x] = e.key;
-
-    if (mode === 'horizontal') cursor.x++;
-    else cursor.y++;
-    update = true;
+    insertCharacter(e.key);
   } else if (e.key === 'Enter') {
+    e.preventDefault();
     if (mode === 'horizontal') {
       cursor.x = 0;
       cursor.y++;
@@ -231,6 +248,16 @@ window.addEventListener('keydown', (e) => {
       cursor.y = 0;
       cursor.x++;
     }
+    // Force the viewport to follow the new cursor position, especially horizontally
+    setTimeout(() => {
+      if (currentCursorElement) {
+        currentCursorElement.scrollIntoView({
+          behavior: 'auto',
+          block: 'nearest',   // Handles vertical alignment
+          inline: 'nearest'   // Handles horizontal alignment (crucial for vertical mode)
+        });
+      }
+    }, 0);
     update = true;
   } else if (e.key === 'Backspace') {
     if (mode === 'horizontal') {
@@ -288,6 +315,30 @@ window.addEventListener('keydown', (e) => {
 
   if (update) updateAndRender();
 });
+
+// Mobile keyboard logic
+hiddenInput.addEventListener('input', (e) => {
+  const char = e.data || e.target.value.slice(-1);
+  // Ignore newline characters since keydown already handled the Enter key
+  if (char && char.length === 1 && char !== '\n') {
+    insertCharacter(char);
+  }
+  // Clear it immediately so it's ready for the next character
+  e.target.value = '';
+});
+
+function insertCharacter(char) {
+  while (gridData.length <= cursor.y) gridData.push([]);
+  // Sometimes after a rotate, there will be holes not at the end of the array
+  // Ensure the specific row exists, even if it's a "hole" inside the array bounds
+  if (!gridData[cursor.y]) gridData[cursor.y] = [];
+  gridData[cursor.y][cursor.x] = char;
+
+  if (mode === 'horizontal') cursor.x++;
+  else cursor.y++;
+
+  updateAndRender();
+}
 
 class MyApi {
   newFile() {
@@ -410,7 +461,7 @@ if (savedScroll) {
 }
 
 // Sync the menu UI with the loaded mode
-const activeModeBtn = document.querySelector(`[onclick*="api.${mode}"]`);
+const activeModeBtn = document.querySelector(`[cmd*="api.${mode}"]`);
 if (activeModeBtn) {
   setGroupChecked(activeModeBtn);
 }
