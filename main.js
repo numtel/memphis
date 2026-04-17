@@ -169,12 +169,38 @@ function updateAndRender() {
   localStorage.setItem('editorCursor', JSON.stringify(cursor));
 }
 
-// Listen to scrolling to trigger new virtualization frames
+// Listen to scrolling to trigger new virtualization frames and push the cursor
 editorContainer.addEventListener('scroll', () => {
   if (scrollRafId) cancelAnimationFrame(scrollRafId);
   scrollRafId = requestAnimationFrame(() => {
+    const scrollLeft = editorContainer.scrollLeft || 0;
+    const scrollTop = editorContainer.scrollTop || 0;
+    const clientWidth = editorContainer.clientWidth || window.innerWidth;
+    const clientHeight = editorContainer.clientHeight || window.innerHeight;
+
+    // Calculate the strictly visible boundaries (accounting for padding)
+    const firstVisibleCol = Math.floor(scrollLeft / cellSize);
+    const lastVisibleCol = Math.max(firstVisibleCol, Math.floor((scrollLeft + clientWidth - cellSize * 2) / cellSize));
+    const firstVisibleRow = Math.floor(scrollTop / cellSize);
+    const lastVisibleRow = Math.max(firstVisibleRow, Math.floor((scrollTop + clientHeight - cellSize * 2) / cellSize));
+
+    let cursorMoved = false;
+
+    // Drag the cursor along if it falls outside the visible area
+    if (cursor.x < firstVisibleCol) { cursor.x = firstVisibleCol; cursorMoved = true; }
+    else if (cursor.x > lastVisibleCol) { cursor.x = lastVisibleCol; cursorMoved = true; }
+
+    if (cursor.y < firstVisibleRow) { cursor.y = firstVisibleRow; cursorMoved = true; }
+    else if (cursor.y > lastVisibleRow) { cursor.y = lastVisibleRow; cursorMoved = true; }
+
+    // If the cursor was pushed, update bounds so the grid expands, allowing infinite scroll
+    if (cursorMoved) {
+      updateBounds();
+      localStorage.setItem('editorCursor', JSON.stringify(cursor));
+    }
+
     // False here ensures passive scrolling doesn't snap back to cursor
-    renderEditor(false); 
+    renderEditor(false);
 
     // Save scroll position
     localStorage.setItem('editorScroll', JSON.stringify({
