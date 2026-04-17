@@ -2,6 +2,8 @@
 
 Custom elements implementation of a Windows 98 (codename Memphis) style menu system.
 
+Also, this demo app is a bi-directional text editor for when you want to edit text like it's a crossword puzzle!
+
 ## Elements
 
 The Memphis menu system uses a set of semantic custom elements to build accessible, keyboard-navigable desktop-style application menus.
