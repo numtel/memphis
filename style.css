@@ -1,2 +1,43 @@
-body { margin:0; overflow:hidden; }
+body {
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 body, button, label { font: 1rem sans-serif; }
+
+memphis-menubar {
+  flex-shrink: 0;
+}
+
+#editor-container {
+  flex-grow: 1;
+  display: grid;
+  gap: 0;
+  background-color: #fafafa;
+  padding: 20px;
+  overflow: auto;
+  align-content: start;
+  justify-content: start;
+}
+
+.cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-size: 1.2rem;
+  color: #222;
+  user-select: none;
+}
+
+.cell.cursor {
+  background-color: #e6f2ff;
+  outline: 2px solid #0078ff;
+  border-color: #0078ff;
+  z-index: 1;
+}
