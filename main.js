@@ -154,7 +154,7 @@ editorContainer.addEventListener('scroll', () => {
 });
 
 // Mathematical click handler
-editorContainer.addEventListener('pointerdown', (e) => {
+function updateFromPointer(e) {
   const rect = editorContainer.getBoundingClientRect();
   // Get the padding value (matches the 20px in style.css)
   const padding = cellSize;
@@ -171,6 +171,19 @@ editorContainer.addEventListener('pointerdown', (e) => {
     cursor.y = targetY;
     updateAndRender(); // Will snap to the cell clicked
   }
+}
+
+let pointerDown = false;
+editorContainer.addEventListener('pointerdown', (e) => {
+  pointerDown = true;
+  updateFromPointer(e);
+});
+editorContainer.addEventListener('pointermove', (e) => {
+  if(pointerDown) updateFromPointer(e);
+});
+editorContainer.addEventListener('pointerup', (e) => {
+  pointerDown = false;
+  updateFromPointer(e);
 });
 
 // Global Keyboard Handler
