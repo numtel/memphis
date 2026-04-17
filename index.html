@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>memphis components</title>
+  <link rel="stylesheet" href="memphis.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body tabindex="-1">
+  <memphis-menubar>
+    <memphis-menu>
+      <memphis-menu-trigger>File</memphis-menu-trigger>
+      <memphis-menu-popup>
+        <memphis-menu-item cmd="api.newFile" key="F2">New</memphis-menu-item>
+        <memphis-menu-sep></memphis-menu-sep>
+        <memphis-menu-item cmd="api.openFile" key="F5">Open...</memphis-menu-item>
+        <memphis-menu-item cmd="api.saveFile" key="F4">Save</memphis-menu-item>
+      </memphis-menu-popup>
+    </memphis-menu>
+    <memphis-menu>
+      <memphis-menu-trigger>Edit</memphis-menu-trigger>
+      <memphis-menu-popup>
+        <memphis-menu-item cmd="api.horizontal" key="F6" class="active">Horizontal</memphis-menu-item>
+        <memphis-menu-item cmd="api.vertical" key="F7">Vertical</memphis-menu-item>
+        <memphis-menu-sep></memphis-menu-sep>
+        <memphis-menu-item cmd="api.preferences">Preferences...</memphis-menu-item>
+      </memphis-menu-popup>
+    </memphis-menu>
+  </memphis-menubar>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
