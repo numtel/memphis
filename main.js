@@ -181,9 +181,11 @@ editorContainer.addEventListener('pointerdown', (e) => {
 editorContainer.addEventListener('pointermove', (e) => {
   if(pointerDown) updateFromPointer(e);
 });
-editorContainer.addEventListener('pointerup', (e) => {
+window.addEventListener('pointerup', (e) => {
   pointerDown = false;
-  updateFromPointer(e);
+  if(e.target.classList && e.target.classList.contains('cell')) {
+    updateFromPointer(e);
+  }
 });
 
 // Global Keyboard Handler
@@ -343,8 +345,32 @@ class MyApi {
     mode = 'vertical';
   }
   
-  preferences() {
-    alert('Not yet implemented! Sorry!');
+  rotate() {
+    const newGrid = [];
+
+    // Transpose the grid: gridData[y][x] becomes newGrid[x][y]
+    for (let y = 0; y < gridData.length; y++) {
+      if (!gridData[y]) continue;
+      for (let x = 0; x < gridData[y].length; x++) {
+        const char = gridData[y][x];
+        if (char) {
+          if (!newGrid[x]) newGrid[x] = [];
+          newGrid[x][y] = char;
+        }
+      }
+    }
+
+    // Update the global state
+    gridData = newGrid;
+
+    // Swap cursor coordinates so it stays with the same character
+    const oldX = cursor.x;
+    cursor.x = cursor.y;
+    cursor.y = oldX;
+
+    // Clear the virtualized cache and re-render the grid
+    resetEditorDOM();
+    updateAndRender();
   }
 }
 
