@@ -268,11 +268,31 @@ window.addEventListener('keydown', (e) => {
     insertCharacter(e.key);
   } else if (e.key === 'Enter') {
     e.preventDefault();
+    let newIndent = 0;
+
     if (mode === 'horizontal') {
-      cursor.x = 0;
+      // Scan backward on the X-axis for the last place with > 1 space
+      for (let i = cursor.x - 1; i > 0; i--) {
+        const c1 = (gridData[cursor.y] && gridData[cursor.y][i]) || ' ';
+        const c2 = (gridData[cursor.y] && gridData[cursor.y][i - 1]) || ' ';
+        if (c1 === ' ' && c2 === ' ') {
+          newIndent = i + 1;
+          break;
+        }
+      }
+      cursor.x = newIndent;
       cursor.y++;
     } else {
-      cursor.y = 0;
+      // Scan backward on the Y-axis for the last place with > 1 space
+      for (let i = cursor.y - 1; i > 0; i--) {
+        const c1 = (gridData[i] && gridData[i][cursor.x]) || ' ';
+        const c2 = (gridData[i - 1] && gridData[i - 1][cursor.x]) || ' ';
+        if (c1 === ' ' && c2 === ' ') {
+          newIndent = i + 1;
+          break;
+        }
+      }
+      cursor.y = newIndent;
       cursor.x++;
     }
     // Force the viewport to follow the new cursor position, especially horizontally
