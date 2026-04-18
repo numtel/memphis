@@ -5,6 +5,7 @@ import {setGroupChecked} from './menuSystem.js';
 let gridData = JSON.parse(localStorage.getItem('gridData')) || [];
 let cursor = JSON.parse(localStorage.getItem('editorCursor')) || { x: 0, y: 0 };
 let mode = localStorage.getItem('editorMode') || 'horizontal';
+document.body.dataset.mode = mode;
 // Keep synced with .cell height/width in style.css
 // And #editor-container padding
 const cellSize = 20;
@@ -432,12 +433,14 @@ class MyApi {
     setGroupChecked(event.target);
     mode = 'horizontal';
     localStorage.setItem('editorMode', mode); // Save preference
+    document.body.dataset.mode = mode;
   }
 
   vertical(event) {
     setGroupChecked(event.target);
     mode = 'vertical';
     localStorage.setItem('editorMode', mode); // Save preference
+    document.body.dataset.mode = mode;
   }
   
   rotate() {
